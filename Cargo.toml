@@ -3,6 +3,14 @@ name = "ApiTemple"
 version = "0.1.0"
 edition = "2021"
 
+#[build]
+#target = "x86_64-unknown-linux-musl"
+
+# Uncomment below to support Rust cross-compilation from macOS to Linux
+# Follow these installation instructions: https://github.com/chinedufn/cross-compile-rust-from-mac-to-linux
+# [target.x86_64-unknown-linux-musl]
+# linker = "x86_64-unknown-linux-gnu-gcc"
+
 [dependencies]
 axum = { version = "0.7.5", features = [ "macros", "json" ] }
 axum-extra = { version = "0.9.3"}
