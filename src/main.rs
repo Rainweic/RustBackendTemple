@@ -2,7 +2,7 @@ use clap::Parser;
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::process::exit;
 use std::str::FromStr;
-use ApiTemple::apis::routes::routes;
+use ApiTemple::routes::routes;
 use ApiTemple::app_state::AppState;
 use ApiTemple::config::get_config;
 use ApiTemple::db::{init_db_pool, ping_db};
