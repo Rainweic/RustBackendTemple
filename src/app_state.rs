@@ -1,15 +1,23 @@
 use crate::db::DbConnPool;
+use rand::Rng;
 use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct AppState {
-    pub dbcp: Arc<DbConnPool>,
+    pub db: Arc<DbConnPool>,
+    pub jwt_secret: String,
 }
 
 impl AppState {
-    pub fn new(dbcp: DbConnPool) -> Self {
+    pub fn new(db: DbConnPool) -> Self {
         Self {
-            dbcp: Arc::new(dbcp),
+            db: Arc::new(db),
+            // 生成随机字符串
+            jwt_secret: rand::thread_rng()
+                .sample_iter(&rand::distributions::Alphanumeric)
+                .take(32)
+                .map(char::from)
+                .collect(),
         }
     }
 }

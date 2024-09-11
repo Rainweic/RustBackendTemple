@@ -1,0 +1,5 @@
+# Dockerfile.db
+FROM postgres:latest
+
+# 复制 init.sql 到容器中
+COPY init.sql /docker-entrypoint-initdb.d/

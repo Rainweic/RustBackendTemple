@@ -40,6 +40,17 @@ impl DatabaseSettings {
             self.port
         ))
     }
+
+    pub fn connection_string_for_docker(&self) -> Secret<String> {
+        Secret::new(format!(
+            "postgres://{}:{}@{}:{}/{}",
+            self.username,
+            self.password.expose_secret(),
+            self.host,
+            self.port,
+            self.name
+        ))
+    }
 }
 
 #[derive(Deserialize)]

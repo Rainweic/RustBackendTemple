@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: br13jhhrh6
+      POSTGRES_PASSWORD: br13jhhrh6
+      POSTGRES_DB: br13jhhrh6
+      POSTGRES_INITDB_ARGS: "--wal-segsize=1"
+
+  app:
+    build: .
+    volumes:
+      - ./:/usr/src/app
+      - cargo_cache:/usr/local/cargo/registry
+      - target_cache:/usr/src/app/target
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: br13jhhrh6
+      POSTGRES_DB: br13jhhrh6
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    command: cargo build -- release && cargo watch -x run
+
+volumes:
+  postgres_data:
+  cargo_cache:
+  target_cache:

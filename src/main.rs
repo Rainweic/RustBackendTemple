@@ -2,10 +2,10 @@ use clap::Parser;
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::process::exit;
 use std::str::FromStr;
-use ApiTemple::routes::routes;
 use ApiTemple::app_state::AppState;
 use ApiTemple::config::get_config;
 use ApiTemple::db::{init_db_pool, ping_db};
+use ApiTemple::routes::routes;
 
 #[tokio::main]
 async fn main() {
@@ -47,14 +47,11 @@ async fn main() {
 
     let routes = routes(state);
 
-    let sock_addr = SocketAddr::from((
-        IpAddr::from_str(opt.addr.as_str()).unwrap_or(IpAddr::V6(Ipv6Addr::LOCALHOST)),
-        opt.port,
-    ));
-    log::info!("Listening for requests on http://{} ...", sock_addr);
+    let addr = "0.0.0.0:8080";
+    log::info!("Listening for requests on http://{} ...", addr);
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind(&sock_addr).await.unwrap();
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
     axum::serve(listener, routes.into_make_service())
         .with_graceful_shutdown(shutdown_signal())
         .await

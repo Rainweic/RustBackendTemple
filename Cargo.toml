@@ -3,6 +3,10 @@ name = "ApiTemple"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "ApiTemple"
+path = "src/main.rs"
+
 #[build]
 #target = "x86_64-unknown-linux-musl"
 
@@ -12,8 +16,8 @@ edition = "2021"
 # linker = "x86_64-unknown-linux-gnu-gcc"
 
 [dependencies]
-axum = { version = "0.7.5", features = [ "macros", "json" ] }
-axum-extra = { version = "0.9.3"}
+axum = { version = "0.7.5", features = [ "macros", "json", "multipart" ] }
+axum-extra = { version = "0.9.3", features = ["multipart"]}
 clap = { version = "4.5.17", features = ["derive"] }
 config = "0.14.0"
 secrecy = { version = "0.8.0", features = ["serde"] }
@@ -24,6 +28,10 @@ tower-http = { version = "0.5.2", features = ["trace", "cors"] }
 tracing-subscriber = "0.3.18"
 log = "0.4.22"
 axum-macros = "0.4.1"
+jsonwebtoken = "8.0"
+chrono = "0.4.24"
+bcrypt = "0.10.1"
+rand = "0.8.5"
 
 [dependencies.sqlx]
 version = "0.8.2"

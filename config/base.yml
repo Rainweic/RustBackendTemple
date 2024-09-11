@@ -1,9 +1,9 @@
 database:
-  host: "localhost"
-  port: 5441
-  username: "fs_rs_rwa"
-  password: "fs_rs_rwa"
-  name: "fs_rs_rwa"
+  host: "db"
+  port: 5432
+  username: "br13jhhrh6"
+  password: "br13jhhrh6"
+  name: "br13jhhrh6"
 
 http:
   port: 8080
