@@ -1,16 +1,15 @@
 use clap::Parser;
 use std::process::exit;
+use tracing_appender::rolling::{daily, RollingFileAppender};
+use tracing_subscriber::fmt::writer::MakeWriterExt;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use ApiTemple::app_state::AppState;
 use ApiTemple::config::get_config;
 use ApiTemple::db::{init_db_pool, ping_db};
 use ApiTemple::routes::routes;
-use tracing_appender::rolling::{daily, RollingFileAppender};
-use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 #[tokio::main]
 async fn main() {
-
     let file_appender = daily("./logs", "prefix.log");
     let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
 
@@ -18,8 +17,7 @@ async fn main() {
         .with(tracing_subscriber::EnvFilter::new(
             std::env::var("RUST_LOG").unwrap_or_else(|_| "info".into()),
         ))
-        .with(tracing_subscriber::fmt::layer()
-            .with_writer(non_blocking.and(std::io::stdout)))
+        .with(tracing_subscriber::fmt::layer().with_writer(non_blocking.and(std::io::stdout)))
         .init();
 
     log::info!(

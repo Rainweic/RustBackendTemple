@@ -1,10 +1,10 @@
 use axum::extract::DefaultBodyLimit;
 use axum::http::Request;
-use axum::routing::{get, post};
+use axum::routing::post;
 use axum::Router;
 use tower_http::cors::{AllowHeaders, Any, CorsLayer};
-use tower_http::trace::TraceLayer;
-use tracing::Level;
+use tower_http::trace::{TraceLayer, DefaultMakeSpan};
+use tower_http::classify::ServerErrorsFailureClass;
 
 use crate::apis::image::idphoto::upload_image;
 use crate::apis::user::{login, register};
@@ -12,21 +12,25 @@ use crate::app_state::AppState;
 use crate::middleware::auth::auth_middleware;
 
 pub fn routes(state: AppState) -> Router {
-    //
     let tracing_layer = TraceLayer::new_for_http()
+        .make_span_with(DefaultMakeSpan::new().include_headers(true))
         .on_request(|request: &Request<_>, _span: &tracing::Span| {
-            tracing::debug!("Request: {} {}", request.method(), request.uri());
+            tracing::info!("请求: {} {}", request.method(), request.uri());
         })
         .on_response(|response: &axum::http::Response<_>, latency: std::time::Duration, _span: &tracing::Span| {
-            let status = response.status();
-            let level = if status.is_server_error() {
-                Level::ERROR
-            } else if status.is_client_error() {
-                Level::WARN
-            } else {
-                Level::INFO
-            };
-            tracing::info!(level = ?level, status = ?status, latency = ?latency, "响应");
+            tracing::info!("响应: {} 耗时: {:?}", response.status(), latency);
+        })
+        .on_failure(|error: ServerErrorsFailureClass, latency: std::time::Duration, span: &tracing::Span| {
+            let path = span.metadata().map(|m| m.target()).unwrap_or("未知路径");
+            
+            let error_message = error.to_string();
+
+            tracing::error!(
+                path = %path,
+                error = %error_message,
+                latency = ?latency,
+                "API 请求失败"
+            );
         });
 
     let cors_layer = CorsLayer::new()

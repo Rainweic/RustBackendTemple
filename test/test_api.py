@@ -1,6 +1,7 @@
 import requests
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import base64
 
 
 # 定义API的基础URL
@@ -32,11 +33,30 @@ def upload_image(token):
     headers = {
         "Authorization": f"Bearer {token}"
     }
-    files = {
-        "file": ("images.jpeg", open("images.jpeg", "rb"), "image/jpeg")
+    
+    # 读取图片并转换为base64
+    with open("images.jpeg", "rb") as image_file:
+        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    
+    payload = {
+        "image": encoded_string,
+        "mode_option": "尺寸列表",
+        "size_list_option": "一寸",
+        "color_option": "白色",
+        "render_option": "纯色",
+        "image_kb_options": "不压缩",
+        "language": "zh",
+        "matting_model_option": "hivision_modnet",
+        "watermark_option": "不添加水印",
+        "face_detect_option": "mtcnn",
+        "head_measure_ratio": 0.2,
+        "top_distance_max": 0.12,
+        "top_distance_min": 0.10
     }
+    
     start_time = time.time()
-    response = requests.post(url, headers=headers, files=files)
+    response = requests.post(url, headers=headers, json=payload)
+    print(f"Upload Image API response: {response.status_code}, {response}")
     end_time = time.time()
     return response.status_code, end_time - start_time
 
