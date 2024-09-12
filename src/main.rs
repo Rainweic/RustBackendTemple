@@ -1,26 +1,26 @@
 use clap::Parser;
-use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::process::exit;
-use std::str::FromStr;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use ApiTemple::app_state::AppState;
 use ApiTemple::config::get_config;
 use ApiTemple::db::{init_db_pool, ping_db};
 use ApiTemple::routes::routes;
+use tracing_appender::rolling::{daily, RollingFileAppender};
+use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 #[tokio::main]
 async fn main() {
-    //
-    let opt = Opt::parse();
-    if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var(
-            "RUST_LOG",
-            format!(
-                "{},hyper=info,mio=info,sqlx=warn,tower_http=warn",
-                opt.log_level
-            ),
-        )
-    }
-    tracing_subscriber::fmt::init();
+
+    let file_appender = daily("./logs", "prefix.log");
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::EnvFilter::new(
+            std::env::var("RUST_LOG").unwrap_or_else(|_| "info".into()),
+        ))
+        .with(tracing_subscriber::fmt::layer()
+            .with_writer(non_blocking.and(std::io::stdout)))
+        .init();
 
     log::info!(
         "The server is starting up. Its process id is {}.",
