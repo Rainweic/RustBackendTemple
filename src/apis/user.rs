@@ -103,5 +103,7 @@ pub async fn login(
     )
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
+    // tracing::info!("登录成功，token: {}", token);
+
     Ok(Json(LoginResponse { token }))
 }

@@ -1,10 +1,7 @@
-use crate::utils::response::ApiResponse;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use serde::de;
 use serde_json::json;
-use tracing::error;
 
 #[derive(Debug)]
 pub enum AppError {
@@ -23,11 +20,7 @@ impl IntoResponse for AppError {
             AppError::InternalServerError(message) => (StatusCode::INTERNAL_SERVER_ERROR, message),
         };
 
-        tracing::error!(
-            status = ?status,
-            error = ?error_message,
-            "API错误"
-        );
+        tracing::error!("API错误: {:?} - {}", status, error_message);
 
         let body = Json(json!({
             "error": error_message

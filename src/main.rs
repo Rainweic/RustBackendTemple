@@ -1,6 +1,5 @@
-use clap::Parser;
 use std::process::exit;
-use tracing_appender::rolling::{daily, RollingFileAppender};
+use tracing_appender::rolling::daily;
 use tracing_subscriber::fmt::writer::MakeWriterExt;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use ApiTemple::app_state::AppState;
@@ -17,10 +16,21 @@ async fn main() {
         .with(tracing_subscriber::EnvFilter::new(
             std::env::var("RUST_LOG").unwrap_or_else(|_| "info".into()),
         ))
-        .with(tracing_subscriber::fmt::layer().with_writer(non_blocking.and(std::io::stdout)))
+        .with(
+            tracing_subscriber::fmt::layer()
+                .with_writer(non_blocking.and(std::io::stdout))
+                // .with_timer(tracing_subscriber::fmt::time::UtcTime::rfc_3339())
+                .with_ansi(false)
+                .with_target(true)
+                .with_level(true)
+                .with_thread_ids(true)
+                .with_thread_names(true)
+                .with_file(true)
+                .with_line_number(true)
+        )
         .init();
 
-    log::info!(
+    tracing::info!(
         "The server is starting up. Its process id is {}.",
         std::process::id()
     );
@@ -31,12 +41,12 @@ async fn main() {
         .await
         .expect("Failed to connect to database.");
     match ping_db(&db_conn_pool).await {
-        true => log::info!(
+        true => tracing::info!(
             "Connected to the database (with {} conns).",
             db_conn_pool.size()
         ),
         false => {
-            log::error!("Failed to ping the database. Exiting now.");
+            tracing::error!("Failed to ping the database. Exiting now.");
             exit(1);
         }
     }
@@ -46,7 +56,7 @@ async fn main() {
     let routes = routes(state);
 
     let addr = "0.0.0.0:8080";
-    log::info!("Listening for requests on http://{} ...", addr);
+    tracing::info!("Listening for requests on http://{} ...", addr);
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
@@ -80,29 +90,5 @@ async fn shutdown_signal() {
         _ = ctrl_c => {},
         _ = terminate => {},
     }
-    log::info!("Shutting down gracefully ...")
-}
-
-#[derive(Parser, Debug)]
-#[clap(
-    name = "server",
-    about = "The server side of Fullstack Rust RealWorld App solution."
-)]
-struct Opt {
-    /// The HTTP listening address.
-    #[clap(short = 'a', long = "addr", default_value = "::1")]
-    addr: String,
-
-    /// The HTTP listening port.
-    #[clap(short = 'p', long = "port", default_value = "8080")]
-    port: u16,
-
-    /// The logging level.
-    #[clap(short = 'l', long = "log", default_value = "info")]
-    log_level: String,
-
-    /// The directory where assets (static) files are served from. <br/>
-    /// These assets are fetched by requests using `/assets/*` path.
-    #[clap(short = 's', long = "assets-dir", default_value = "../dist")]
-    assets_dir: String,
+    tracing::info!("Shutting down gracefully ...")
 }

@@ -15,7 +15,7 @@ def test_register_user():
         "password": "testpassword"
     }
     response = requests.post(url, json=payload)
-    print(f"Register User API response: {response.status_code}, {response}")
+    print(f"Register User API response: {response.status_code}, {response.text}")
 
 # 测试用户登录API
 def test_user_login():
@@ -25,7 +25,7 @@ def test_user_login():
         "password": "testpassword"
     }
     response = requests.post(url, json=payload)
-    print(f"Login API response: {response.status_code}, {response.json()}")
+    print(f"Login API response: {response.status_code}, {response.text}")
     return response.json().get("token")
 
 def upload_image(token):
@@ -34,12 +34,12 @@ def upload_image(token):
         "Authorization": f"Bearer {token}"
     }
     
-    # 读取图片并转换为base64
-    with open("images.jpeg", "rb") as image_file:
-        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+    # 直接打开图片文件，不需要base64编码
+    files = {
+        'input_image': ('image.jpg', open('images.jpeg', 'rb'), 'image/jpeg')
+    }
     
-    payload = {
-        "image": encoded_string,
+    data = {
         "mode_option": "尺寸列表",
         "size_list_option": "一寸",
         "color_option": "白色",
@@ -49,14 +49,14 @@ def upload_image(token):
         "matting_model_option": "hivision_modnet",
         "watermark_option": "不添加水印",
         "face_detect_option": "mtcnn",
-        "head_measure_ratio": 0.2,
-        "top_distance_max": 0.12,
-        "top_distance_min": 0.10
+        "head_measure_ratio": "0.2",
+        "top_distance_max": "0.12",
+        "top_distance_min": "0.10"
     }
     
     start_time = time.time()
-    response = requests.post(url, headers=headers, json=payload)
-    print(f"Upload Image API response: {response.status_code}, {response}")
+    response = requests.post(url, headers=headers, files=files, data=data)
+    print(f"Upload Image API response: {response.status_code}, {response.text}")
     end_time = time.time()
     return response.status_code, end_time - start_time
 
@@ -83,7 +83,7 @@ def test_upload_image_performance(token, num_requests, max_workers):
 if __name__ == "__main__":
     test_register_user()
     token = test_user_login()
-    num_requests = 100  # 总请求数
-    max_workers = 10  # 最大并发数
+    num_requests = 1  # 总请求数
+    max_workers = 1  # 最大并发数
 
     test_upload_image_performance(token, num_requests, max_workers)

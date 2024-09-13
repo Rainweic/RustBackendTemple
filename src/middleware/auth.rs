@@ -70,6 +70,7 @@ pub async fn auth_middleware(
     mut request: Request<Body>,
     next: Next,
 ) -> Result<Response, (StatusCode, String)> {
+
     let auth_header = request
         .headers()
         .get("Authorization")

@@ -1,9 +1,7 @@
-use crate::app_state::AppState;
 use crate::utils::errors::AppError;
 use crate::utils::response::ApiResponse;
-use axum::{extract::Multipart, extract::State};
+use axum::extract::Multipart;
 use base64;
-use log::log;
 use phf::phf_set;
 use reqwest::multipart as reqwest_multipart;
 use serde_json::{json, Value};
@@ -56,40 +54,45 @@ async fn save_image(
 }
 
 pub async fn upload_image(mut multipart: Multipart) -> Result<ApiResponse<Value>, AppError> {
+
+    tracing::info!("开始处理上传图片请求");
+
     let mut form = reqwest_multipart::Form::new();
     let mut input_image = None;
 
-    while let Some(field) = multipart
-        .next_field()
-        .await
-        .map_err(|e| AppError::BadRequest(e.to_string()))?
-    {
+    while let Some(field) = multipart.next_field().await.map_err(|e| {
+        tracing::error!("解析 multipart 字段时出错: {}", e);
+        AppError::BadRequest(format!("解析请求失败: {}", e.to_string()))
+    })? {
         let name = field.name().unwrap_or("").to_string();
 
         if !ALLOWED_FIELDS.contains(name.as_str()) {
-            return Err(AppError::BadRequest(format!("Invalid field: {}", name)));
+            tracing::error!("无效的字段: {}", name);
+            return Err(AppError::BadRequest(format!("无效的字段: {}", name)));
         }
 
         if name == "input_image" {
-            let content_type = field
-                .content_type()
-                .ok_or_else(|| AppError::BadRequest("Missing content type".to_string()))?;
+            let content_type = field.content_type().ok_or_else(|| {
+                tracing::error!("input_image 缺少 content type");
+                AppError::BadRequest("Missing content type".to_string())
+            })?;
             if !content_type.starts_with("image/") {
+                tracing::error!("无效的文件类型: {}", content_type);
                 return Err(AppError::BadRequest(format!(
-                    "Invalid file type: {}",
+                    "无效的文件类型: {}",
                     content_type
                 )));
             }
-            let data = field
-                .bytes()
-                .await
-                .map_err(|e| AppError::InternalServerError(e.to_string()))?;
+            let data = field.bytes().await.map_err(|e| {
+                tracing::error!("读取 input_image 数据时出错: {}", e);
+                AppError::InternalServerError(e.to_string())
+            })?;
             input_image = Some(data);
         } else {
-            let value = field
-                .text()
-                .await
-                .map_err(|e| AppError::BadRequest(e.to_string()))?;
+            let value = field.text().await.map_err(|e| {
+                tracing::error!("读取字段 {} 的值时出错: {}", name, e);
+                AppError::BadRequest(format!("Invalid field: {}, error: {}", name, e.to_string()))
+            })?;
             form = form.text(name, value);
         }
     }
@@ -108,12 +111,14 @@ pub async fn upload_image(mut multipart: Multipart) -> Result<ApiResponse<Value>
         .multipart(form)
         .send()
         .await
-        .map_err(|e| AppError::InternalServerError(e.to_string()))?;
-    log::info!("send request to hivision_idphotos_api: {:?}", response);
+        .map_err(|e| {
+            tracing::error!("请求 HivisionIDPhotos API 失败: {}", e);
+            AppError::InternalServerError(format!("请求 HivisionIDPhotos API 失败: {}", e.to_string()))
+        })?;
 
     if !response.status().is_success() {
         return Err(AppError::InternalServerError(
-            "Failed to process image".to_string(),
+            "调用 HivisionIDPhotos API 失败".to_string(),
         ));
     }
 
@@ -127,7 +132,9 @@ pub async fn upload_image(mut multipart: Multipart) -> Result<ApiResponse<Value>
     let uuid = Uuid::new_v4();
 
     let standard_image = save_image(
-        result["standard_image"].as_str().unwrap_or("standard_image"),
+        result["standard_image"]
+            .as_str()
+            .unwrap_or("standard_image"),
         "standard",
         &uuid,
         &image_location,
