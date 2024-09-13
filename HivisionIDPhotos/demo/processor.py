@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 from hivision import IDCreator
 from hivision.error import FaceError, APIError
 from hivision.utils import add_background, resize_image_to_kb, add_watermark
@@ -43,6 +44,39 @@ class IDPhotoProcessor:
         top_distance_max=0.12,
         top_distance_min=0.10,
     ):
+        
+        # log输出所有输入参数值
+        print(f"""
+处理ID照片请求，输入参数：
+- input_image: <image_data>
+- mode_option: {mode_option}
+- size_list_option: {size_list_option}
+- color_option: {color_option}
+- render_option: {render_option}
+- image_kb_options: {image_kb_options}
+- custom_color_R: {custom_color_R}
+- custom_color_G: {custom_color_G}
+- custom_color_B: {custom_color_B}
+- custom_size_height: {custom_size_height}
+- custom_size_width: {custom_size_width}
+- custom_image_kb: {custom_image_kb}
+- language: {language}
+- matting_model_option: {matting_model_option}
+- watermark_option: {watermark_option}
+- watermark_text: {watermark_text}
+- watermark_text_color: {watermark_text_color}
+- watermark_text_size: {watermark_text_size}
+- watermark_text_opacity: {watermark_text_opacity}
+- watermark_text_angle: {watermark_text_angle}
+- watermark_text_space: {watermark_text_space}
+- face_detect_option: {face_detect_option}
+- head_measure_ratio: {head_measure_ratio}
+- top_distance_max: {top_distance_max}
+- top_distance_min: {top_distance_min}
+""")
+        
+        print(LOCALES)
+        
         top_distance_min = top_distance_max - 0.02
 
         idphoto_json = {

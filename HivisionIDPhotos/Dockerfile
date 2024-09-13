@@ -20,8 +20,8 @@ RUN apt-get install libpython3.10-dev ffmpeg libgl1-mesa-glx libglib2.0-0 cmake 
 
 WORKDIR /app
 
-COPY . .
-
+# 复制requirements文件并安装依赖
+COPY requirements.txt requirements-app.txt ./
 RUN pip3 install -r requirements.txt && \
     pip3 install -r requirements-app.txt
 

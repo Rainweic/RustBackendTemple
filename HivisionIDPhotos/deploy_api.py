@@ -5,6 +5,12 @@ from demo.processor import IDPhotoProcessor
 import numpy as np
 import cv2
 import base64
+import traceback
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 processor = IDPhotoProcessor()
@@ -68,9 +74,12 @@ async def process_idphoto(
     top_distance_min: float = Form(0.10)  # 头顶最小距离 (0.02-0.5)
 ):
     try:
+        logger.info("开始处理ID照片请求")
         image_bytes = await input_image.read()
         nparr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        # logger.debug(f"接收到的参数: mode_option={mode_option}, size_list_option={size_list_option}, ...")
 
         result = processor.process(
             img,
@@ -100,18 +109,24 @@ async def process_idphoto(
             top_distance_min
         )
 
+        logger.info("ID照片处理成功")
         return {
             "status": "success",
             "standard_image": numpy_to_base64(result[0]),
             "hd_image": numpy_to_base64(result[1]),
             "standard_png": numpy_to_base64(result[2]),
             "hd_png": numpy_to_base64(result[3]),
-            "layout_image": numpy_to_base64(result[4].value) if result[4].value is not None else None,
-            "notification": result[5].value if result[5].visible else None,
-            "download_path": result[6].value if result[6].visible else None
+            # "layout_image": numpy_to_base64(result[4].value) if result[4].value is not None else None,
+            "layout_image": None,
+            # "notification": result[5].value if result[5].visible else None,
+            # "download_path": result[6].value if result[6].visible else None
+            "notification": None,
+            "download_path": None
         }
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"处理ID照片时发生错误: {str(e)}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"处理ID照片时发生错误: {str(e)}")
 
 
 if __name__ == "__main__":

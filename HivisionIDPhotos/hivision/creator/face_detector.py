@@ -145,7 +145,7 @@ def detect_face_retinaface(ctx: Context):
     global RETINAFCE_SESS
 
     if RETINAFCE_SESS is None:
-        print("首次加载RetinaFace模型...")
+        print("首次加载RetinaFace模型...---")
         # 计算用时
         tic = time()
         faces_dets, sess = retinaface_detect_faces(

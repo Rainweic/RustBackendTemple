@@ -21,6 +21,8 @@ services:
     command: python3 deploy_api.py
     ports:
       - '7890:7890'
+    volumes:
+      - ./HivisionIDPhotos:/app  # 将当前目录挂载到容器内的/app目录
 
   app:
     build: 
